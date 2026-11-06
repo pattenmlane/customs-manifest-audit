@@ -1,0 +1,11 @@
+_ > nanoagent.plugin.v0001.ProductConfig:
+tagline: "Catch what a shipment manifest gets wrong, and charge the right duty"
+summary: "Give it a case number and an agent checks a small invented shipment against an invented rule table, flags every bad line, and files the duty really owed. Exact fraction arithmetic decides whether it got there. The codes and rates are made up: this is a puzzle, not tariff law."
+highlights:
+  - "Believing the declared codes and values always gives the wrong duty"
+  - "A tool does the arithmetic; the agent decides which lines, codes and values to charge"
+  - "Judged on the saved audit, not on what the agent says it did"
+steps:
+  - "Ask for a case by number, such as case 7"
+  - "The agent reads the manifest and spots the violations"
+  - "It works out the duty and files the audit, and the verdict shows whether it is right"

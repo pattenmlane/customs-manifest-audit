@@ -1,0 +1,42 @@
+_ > nanoagent.plugin.v0001.ManifestConfig:
+id: customs-manifest-audit
+name: Customs Manifest Audit
+version: 0.1.0
+status: ready
+spec: nanoagent.plugin/v0001
+
+runtime > nanoagent.plugin.v0001.RuntimeConfig:
+  type: mcp_stdio
+  command: [uv, run, --frozen, python, -m, plugin]
+
+permissions > nanoagent.plugin.v0001.PermissionsConfig:
+  network > nanoagent.plugin.v0001.NetworkConfig:
+    hosts: []
+  filesystem > nanoagent.plugin.v0001.FilesystemConfig:
+    write: [workspace]
+
+# One entry per contract.Tool; its input and output classes are contract.TOOLS's.
+tools > dict[contract.Tool, nanoagent.plugin.v0001.ToolConfig]:
+  pin_manifest:
+    description: Pin the task's answer key, the manifest with its planted violations and total duty, out of the agent's sight
+  read_manifest:
+    description: Read a case's shipment lines and its invented rule table
+  compute_duty:
+    description: Apply rates, surcharges, rounding and the de minimis threshold to the lines, codes and values passed in
+  file_audit:
+    description: Save the findings and total duty as audits/<seed>.json in the workspace
+
+# One entry per contract.Task; its input class is contract.TASKS's.
+tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
+  audit-manifest:
+    description: Flag every violation on a shipment manifest and work out the duty really owed
+    runner: agent
+    tools: [read_manifest, compute_duty, file_audit]
+    reference: pin_manifest
+    instructions: |-
+      Plan. Exactly three tool calls: read_manifest with the seed, compute_duty, file_audit, then submit. Reason briefly.
+      Violations. Check all four on every line, embargoed lines too; a line may have several or none. Its rule is the one with the same category and material.
+      WRONG_HS: declared_hs is not the rule's hs_code. MISSING_LICENSE: the category is in license_categories and has_license is false. UNDERVALUED: declared_value_cents is strictly below the line's floor_value_cents (the rule's floor times the weight, already rounded half up to a cent); exactly at it is fine. EMBARGOED_ORIGIN: origin is in embargoed_origins.
+      Duty. Call compute_duty once with one entry for every line not from an embargoed origin, flagged or clean, and none for embargoed lines. hs_code is the rule's hs_code, never the declared one. assessed_value_cents is floor_value_cents on an UNDERVALUED line, otherwise declared_value_cents. The tool adds the origin's surcharge to the rate, rounds each line's duty half up to a cent, and makes the total 0 when the declared value of the lines passed is at or under de_minimis_cents.
+      Filing. Call file_audit with one finding per flagged line, listing every violation on it, nothing for clean lines, and compute_duty's total_duty_cents.
+      Submit seed, path, findings and total_duty_cents exactly as file_audit returned them.
